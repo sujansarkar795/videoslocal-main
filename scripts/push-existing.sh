@@ -3,7 +3,7 @@
 # Token is read from the OpenChamber secret file, never printed or stored.
 set -euo pipefail
 
-TOKEN_FILE="/c/Users/Lab/.config/openchamber/secrets/a33295ad539528ad1a71dabeaf489e9d"
+TOKEN_FILE="/c/Users/Lab/.config/openchamber/secrets/bda81cf06b8833ad9a8ff8b2d7b7c3ce"
 REPO="videoslocal-main"
 ROOT="/c/Users/Public/Documents/videoslocal"
 
@@ -64,7 +64,7 @@ cat > /tmp/vl-askpass.sh <<'EOS'
 #!/bin/sh
 case "$1" in
   Username*) echo "x-access-token" ;;
-  *) cat "/c/Users/Lab/.config/openchamber/secrets/a33295ad539528ad1a71dabeaf489e9d" ;;
+  *) cat "/c/Users/Lab/.config/openchamber/secrets/bda81cf06b8833ad9a8ff8b2d7b7c3ce" ;;
 esac
 EOS
 chmod +x /tmp/vl-askpass.sh
