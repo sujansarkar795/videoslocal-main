@@ -1,14 +1,19 @@
 /**
  * GET /api/dl?url=…&mode=video|audio&height=NN — serverless variant.
- * Streams the media to the browser through the function.
  *
- * Why a stream and not the desktop job flow: serverless has no persistent disk
- * and no cross-request memory, so there is no ./downloads and no job list.
- * yt-dlp writes to stdout and we pipe it straight at the client, which is what
- * the Content-Disposition download needs.
+ * Shape of the thing: yt-dlp downloads and merges to a real file in /tmp, then
+ * the file is streamed to the browser. It is deliberately not `-o -` straight
+ * into the response — an MP4 written to a pipe has no seekable header, so the
+ * muxer cannot write the avcC box and players report "non-existing PPS 0"
+ * for every frame. Verified on a real download: right duration, undecodable
+ * video. /tmp is the only writable place in a function, and it is per-container.
  */
 import { spawn } from 'node:child_process';
+import fs from 'node:fs';
+import { randomUUID } from 'node:crypto';
 import { ytPath, ffmpegPath, commonArgs, formatPlan, hintFor, run, authArgs } from './_util.js';
+
+const MAX_BYTES = '250M'; // /tmp is ~512 MB and shared with the binaries' scratch
 
 function slug(title, ext) {
   const t = String(title || 'video')
@@ -40,15 +45,17 @@ export default async function handler(req, res) {
   const ffOk = (await run(ffBin, ['-version'], 8000)).code === 0;
   const plan = formatPlan(mode, height, ffOk);
 
+  const id = randomUUID().slice(0, 8);
+  const out = `/tmp/${id}.${plan.ext}`;
+
   const args = [
-    '--no-simulate',
-    '-o', '-',
-    ...commonArgs(),
+    '-o', out,
+    '--no-playlist',
+    '--no-warnings',
+    '--no-mtime',
+    '--max-filesize', MAX_BYTES,
     ...authArgs(),
     ...(ffOk ? ['--ffmpeg-location', ffBin] : []),
-    // Piping an MP4 means no second pass and no seekable output: fragmented
-    // MP4 is the only form a player can open cleanly from a stream.
-    ...(ffOk ? ['--postprocessor-args', 'ffmpeg:-movflags frag_keyframe+empty_moov+default_base_moof'] : []),
     ...plan.args,
     url,
   ];
@@ -61,76 +68,40 @@ export default async function handler(req, res) {
     return;
   }
 
-  // yt-dlp writes progress chatter to stderr; stderr must drain or it deadlocks.
   let stderr = '';
   child.stderr.on('data', (d) => (stderr = (stderr + d).slice(-4000)));
 
-  child.on('close', (code) => {
-    if (!res.headersSent) {
-      res.status(502).json({
-        error: 'The source did not produce a stream.',
-        detail: (stderr || '').trim().split('\n').pop() || `exit ${code}`,
-        hint: hintFor(stderr),
-      });
-    } else {
-      res.end();
-    }
+  const code = await new Promise((resolve) => {
+    child.on('error', () => resolve(-1));
+    child.on('close', (c) => resolve(c));
   });
 
-  child.on('error', (e) => {
-    if (!res.headersSent) res.status(500).json({ error: 'Engine failed.', detail: e.message });
-    else res.end();
-  });
+  const exists = fs.existsSync(out);
+  const size = exists ? fs.statSync(out).size : 0;
 
-  // Wait for the first byte so a failure answers as JSON instead of a
-  // zero-byte "download" that looks like it worked.
-  const outcome = await new Promise((resolve) => {
-    let done = false;
-    const timer = setTimeout(() => settle('timeout'), 15000);
-
-    function settle(v) {
-      if (done) return;
-      done = true;
-      clearTimeout(timer);
-      child.stdout.removeListener('data', onData);
-      child.removeListener('close', onClose);
-      child.removeListener('error', onError);
-      resolve(v);
-    }
-    const onData = () => settle('data');
-    const onClose = (c) => settle(`close:${c}`);
-    const onError = () => settle('error');
-
-    child.stdout.once('data', onData);
-    child.once('close', onClose);
-    child.once('error', onError);
-  });
-
-  if (outcome !== 'data') {
-    if (!res.headersSent) {
-      try { child.kill('SIGKILL'); } catch {}
-      res.status(502).json({
-        error: outcome === 'timeout' ? 'The source took too long to start.' : 'The source did not produce a stream.',
-        detail: (stderr || '').trim().split('\n').pop() || outcome,
-        hint: hintFor(stderr),
-      });
-    }
+  if (code !== 0 || !exists || size < 1000) {
+    try { child.kill('SIGKILL'); } catch {}
+    if (exists) { try { fs.unlinkSync(out); } catch {} }
+    res.status(502).json({
+      error: size === 0 && /max-filesize|larger than/i.test(stderr)
+        ? 'That file is larger than this deployment can hold.'
+        : 'The source did not produce a file.',
+      detail: (stderr || '').trim().split('\n').filter(Boolean).pop() || `exit ${code}`,
+      hint: hintFor(stderr),
+    });
     return;
   }
 
   res.setHeader('Content-Type', plan.mime);
+  res.setHeader('Content-Length', String(size));
   res.setHeader('Content-Disposition', `attachment; filename="${slug(title, plan.ext)}"`);
   res.setHeader('Cache-Control', 'no-store');
-  res.setHeader('X-Accel-Buffering', 'no');
 
-  child.stdout.pipe(res);
+  const stream = fs.createReadStream(out);
+  stream.pipe(res);
 
-  // res, not req: req 'close' fires when the request body ends (immediately for
-  // a GET), which killed the engine a few KB short of the last chunk. Only a
-  // response that closes before it finished means the client actually left.
-  res.on('close', () => {
-    if (!res.writableEnded) {
-      try { child.kill('SIGKILL'); } catch {}
-    }
-  });
+  const drop = () => { try { fs.unlinkSync(out); } catch {} };
+  stream.on('close', drop);
+  stream.on('error', () => { drop(); if (!res.headersSent) res.status(500).end(); });
+  res.on('close', () => { if (!res.writableEnded) stream.destroy(); });
 }
