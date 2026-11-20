@@ -6,3 +6,6 @@ server.err
 .playwright-mcp/
 api/bin/
 *.png
+
+scripts/push-existing.sh
+
