@@ -1,16 +1,15 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "cleanUrls": true,
+  "trailingSlash": false,
   "functions": {
     "api/health.js": { "maxDuration": 30 },
     "api/info.js": { "maxDuration": 60 },
     "api/dl.js": { "maxDuration": 300 }
   },
-  "headers": [
-    {
-      "source": "/api/(.*)",
-      "headers": [
-        { "key": "Cache-Control", "value": "no-store" }
-      ]
-    }
+  "rewrites": [
+    { "source": "/api/health", "destination": "/api/health.js" },
+    { "source": "/api/info", "destination": "/api/info.js" },
+    { "source": "/api/dl", "destination": "/api/dl.js" }
   ]
 }
