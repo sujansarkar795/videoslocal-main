@@ -9,25 +9,48 @@ import path from 'node:path';
 
 /* The bundler keeps includeFiles relative to the project root, so the binary
  * can land in a couple of places depending on how Vercel packs the function.
- * Try each, then fall back to PATH. */
+ * /var/task is read-only at runtime, so chmod there fails and the file may not
+ * carry its exec bit: copy it to /tmp (writable, executable, cached per
+ * container) and run that. */
 const CANDIDATES = [
   path.join(process.cwd(), 'api', 'bin', 'yt-dlp'),
-  path.join(process.cwd(), 'bin', 'yt-dlp'),
   '/var/task/api/bin/yt-dlp',
+  path.join(process.cwd(), 'bin', 'yt-dlp'),
   '/var/task/bin/yt-dlp',
   '/usr/local/bin/yt-dlp',
   '/usr/bin/yt-dlp',
 ];
 
+const TMP = '/tmp/yt-dlp';
+
+function executable(p) {
+  try {
+    fs.accessSync(p, fs.constants.X_OK);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function ytPath() {
+  if (executable(TMP)) return TMP;
+
   for (const p of CANDIDATES) {
+    let exists = false;
+    try { exists = fs.existsSync(p); } catch {}
+    if (!exists) continue;
+
+    try { fs.chmodSync(p, 0o755); } catch {}
+    if (executable(p)) return p;
+
+    // read-only mount or lost mode: copy where we can set the bit
     try {
-      if (fs.existsSync(p)) {
-        fs.chmodSync(p, 0o755);
-        return p;
-      }
+      fs.copyFileSync(p, TMP);
+      fs.chmodSync(TMP, 0o755);
+      if (executable(TMP)) return TMP;
     } catch {}
   }
+
   return 'yt-dlp'; // last resort: whatever is on PATH
 }
 
