@@ -22,6 +22,14 @@ const CANDIDATES = [
 ];
 
 const TMP = '/tmp/yt-dlp';
+const FF_CANDIDATES = [
+  path.join(process.cwd(), 'api', 'bin', 'ffmpeg'),
+  '/var/task/api/bin/ffmpeg',
+  '/usr/local/bin/ffmpeg',
+  '/usr/bin/ffmpeg',
+  '/bin/ffmpeg',
+];
+const FF_TMP = '/tmp/ffmpeg';
 
 function executable(p) {
   try {
@@ -32,10 +40,12 @@ function executable(p) {
   }
 }
 
-export function ytPath() {
-  if (executable(TMP)) return TMP;
+/** /var/task is read-only, so a bundled binary is copied to /tmp to get its
+ *  exec bit. Returns the first candidate that can actually be executed. */
+function resolveBinary(candidates, tmpPath, fallback) {
+  if (executable(tmpPath)) return tmpPath;
 
-  for (const p of CANDIDATES) {
+  for (const p of candidates) {
     let exists = false;
     try { exists = fs.existsSync(p); } catch {}
     if (!exists) continue;
@@ -43,15 +53,22 @@ export function ytPath() {
     try { fs.chmodSync(p, 0o755); } catch {}
     if (executable(p)) return p;
 
-    // read-only mount or lost mode: copy where we can set the bit
     try {
-      fs.copyFileSync(p, TMP);
-      fs.chmodSync(TMP, 0o755);
-      if (executable(TMP)) return TMP;
+      fs.copyFileSync(p, tmpPath);
+      fs.chmodSync(tmpPath, 0o755);
+      if (executable(tmpPath)) return tmpPath;
     } catch {}
   }
 
-  return 'yt-dlp'; // last resort: whatever is on PATH
+  return fallback;
+}
+
+export function ytPath() {
+  return resolveBinary(CANDIDATES, TMP, 'yt-dlp');
+}
+
+export function ffmpegPath() {
+  return resolveBinary(FF_CANDIDATES, FF_TMP, 'ffmpeg');
 }
 
 export function binaryReport() {

@@ -8,7 +8,7 @@
  * the Content-Disposition download needs.
  */
 import { spawn } from 'node:child_process';
-import { ytPath, commonArgs, formatPlan, hintFor, run, authArgs } from './_util.js';
+import { ytPath, ffmpegPath, commonArgs, formatPlan, hintFor, run, authArgs } from './_util.js';
 
 function slug(title, ext) {
   const t = String(title || 'video')
@@ -34,11 +34,21 @@ export default async function handler(req, res) {
     return;
   }
 
-  // ffmpeg decides merge vs progressive-only; check once, cheaply.
-  const ff = await run('ffmpeg', ['-version'], 8000);
-  const plan = formatPlan(mode, height, ff.code === 0);
+  // ffmpeg decides merge vs progressive-only; it ships via postinstall, but a
+  // deploy without it must still answer instead of failing on a merge.
+  const ffBin = ffmpegPath();
+  const ffOk = (await run(ffBin, ['-version'], 8000)).code === 0;
+  const plan = formatPlan(mode, height, ffOk);
 
-  const args = ['--no-simulate', '-o', '-', ...commonArgs(), ...authArgs(), ...plan.args, url];
+  const args = [
+    '--no-simulate',
+    '-o', '-',
+    ...commonArgs(),
+    ...authArgs(),
+    ...(ffOk ? ['--ffmpeg-location', ffBin] : []),
+    ...plan.args,
+    url,
+  ];
 
   let child;
   try {

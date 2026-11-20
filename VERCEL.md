@@ -57,15 +57,27 @@ The yt-dlp binary is not traced by the bundler either; it ships because
 
 - No progress percent — the function streams, it does not report.
 - No cancel button — the browser controls the transfer.
-- No ffmpeg. The runtime has no ffmpeg and the repo does not ship one, so there
-  is no merging and no MP3. Video is a ready-mixed progressive MP4 (usually
-  360p/720p); audio is the source `m4a`. `api/_util.js` checks for ffmpeg at
-  request time and picks that plan automatically.
+- ffmpeg **is** bundled now (postinstall writes `api/bin/ffmpeg`, ~80 MB), so
+  merging works and YouTube's separate streams can be joined. It costs cold
+  start and function size, nothing else. `/api/health` reports the binary; if it
+  is missing the code falls back to ready-mixed formats and says so.
 - Function time caps long videos (`maxDuration: 300` on `api/dl.js`; Hobby caps
   at 60s unless Fluid Compute is on).
-- Cloud IPs get rate-limited by platforms more than home/VPS IPs.
-- Login-walled sources need `cookies.txt`, which serverless can't hold — run
-  that class of source locally or on the VPS.
+- Cloud IPs get rate-limited by platforms more than home/VPS IPs. YouTube walls
+  most videos from datacenter IPs regardless of client: every yt-dlp client
+  variant (tv, ios, web_safari, android_vr, ipv4) returned the same "confirm
+  you're not a bot". Cookies (`YT_COOKIES_B64`) or a proxy (`YT_PROXY`) are the
+  only fixes, both read from env at request time.
+- Login-walled sources need `cookies.txt`, which serverless can't hold — the env
+  var above is the equivalent.
+
+### Why the download cannot be moved into the visitor's browser
+
+It was worth checking: `googlevideo.com` reflects the page origin, so a page can
+read video bytes. But `youtube.com/youtubei/v1/*` sends **no** CORS headers, so
+a page cannot obtain the signed URLs in the first place. Client-side only works
+for a browser extension with host permissions, not for a website. Verified, not
+assumed.
 
 For those cases the Docker/VPS path still works unchanged:
 
