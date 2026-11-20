@@ -1,12 +1,15 @@
-/* Transfer UI — resolves a link, then runs the download and reports state. */
+/* Serverless adapter — same UI, different endpoints.
+   Desktop/VPS: /api/info + /api/download + SSE.
+   Vercel: /api/info (stateless) + /api/dl (stream). Detects at load. */
 (() => {
   const $ = (s, r = document) => r.querySelector(s);
   const slot = $('#slot');
   if (!slot) return;
 
+  const SRV = fetch('/api/health').then(r => r.json()).catch(() => ({}));
+  let MODE = 'srv';     // srv = job flow, sls = stream flow
   let info = null;
   let es = null;
-  let jobId = null;
 
   const esc = (v) =>
     String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -23,24 +26,18 @@
     if (!s) return '';
     s = Math.round(s);
     const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60;
-    const mm = `${m}:${String(x).padStart(2, '0')}`;
-    return h ? `${h}:${String(m).padStart(2, '0')}:${String(x).padStart(2, '0')}` : mm;
+    return h ? `${h}:${String(m).padStart(2, '0')}:${String(x).padStart(2, '0')}` : `${m}:${String(x).padStart(2, '0')}`;
   };
 
   const siteLabel = (k) =>
     ({ Youtube: 'YouTube', Twitter: 'X', Instagram: 'Instagram', Facebook: 'Facebook', TikTok: 'TikTok', Reddit: 'Reddit', Vimeo: 'Vimeo' }[k] || k || 'Source');
 
-  /* one colour per platform: colour identifies the source, it never decorates */
   const siteColor = (k) =>
-    ({
-      Youtube: '#ff4b45',
-      Twitter: '#e8e8e8',
-      Instagram: '#e1306c',
-      Facebook: '#3d8bff',
-      TikTok: '#2ec8c8',
-      Reddit: '#ff4500',
-      Vimeo: '#17d5ff',
-    }[k] || '#9897a3');
+    ({ Youtube: '#ff4b45', Twitter: '#e8e8e8', Instagram: '#e1306c', Facebook: '#3d8bff', TikTok: '#2ec8c8', Reddit: '#ff4500', Vimeo: '#17d5ff' }[k] || '#9897a3');
+
+  SRV.then((h) => {
+    if (h && h.runtime === 'vercel-serverless') MODE = 'sls';
+  });
 
   /* ---------- paste ---------- */
 
@@ -62,7 +59,7 @@
     const url = $('#url').value.trim();
     if (!url) { $('#url').focus(); return; }
 
-    cancelJob();
+    teardown();
     const go = $('#go');
     go.disabled = true;
     go.textContent = 'Checking…';
@@ -127,15 +124,15 @@
           </div>
         </fieldset>
         <div class="actions">
-          <button class="btn btn-solid" id="dl" type="button">Download</button>
+          <button class="btn btn-solid" id="dl" type="button">${MODE === 'sls' ? 'Download via stream' : 'Download'}</button>
         </div>
         <div id="live"></div>
       </div>`;
 
-    $('#dl').addEventListener('click', start);
+    $('#dl').addEventListener('click', MODE === 'sls' ? stream : start);
   }
 
-  /* ---------- download ---------- */
+  /* ---------- flow A: job + SSE (desktop / VPS) ---------- */
 
   async function start() {
     if (!info) return;
@@ -152,8 +149,11 @@
         <div class="actions"><button class="btn btn-sm" id="cancel" type="button">Cancel</button></div>
       </div>`;
 
-    $('#cancel')?.addEventListener('click', () => cancelJob(true));
+    $('#cancel')?.addEventListener('click', () => {
+      if (es) fetch(`/api/jobs/${jobId}/cancel`, { method: 'POST' }).catch(() => {});
+    });
 
+    let jobId;
     try {
       const r = await fetch('/api/download', {
         method: 'POST',
@@ -179,7 +179,6 @@
       if (!track) return;
 
       if (j.status === 'downloading' || j.status === 'queued') {
-        track = $('#track');
         track.classList.toggle('is-waiting', !j.percent);
         $('#fill').style.width = `${j.percent || 0}%`;
         $('#stageLabel').textContent =
@@ -219,6 +218,66 @@
     es.onerror = () => { if (es) { es.close(); es = null; } };
   }
 
+  /* ---------- flow B: serverless stream (Vercel) ---------- */
+
+  async function stream() {
+    if (!info) return;
+    const v = $('input[name="format"]:checked')?.value || 'best';
+    const mode = v === 'audio' ? 'audio' : 'video';
+    const height = v === 'best' || v === 'audio' ? null : Number(v);
+
+    $('#dl').disabled = true;
+    $('#live').innerHTML = `
+      <div class="progress">
+        <div class="progress-head"><span id="stageLabel">Streaming to your browser</span><b id="readout"></b></div>
+        <div class="track is-waiting" id="track"><div class="fill" id="fill"></div></div>
+        <p class="readout">Big files depend on the function time limit. Self-host for full-length videos.</p>
+      </div>`;
+
+    const params = new URLSearchParams({
+      url: info.url,
+      mode,
+      title: info.title || '',
+    });
+    if (height) params.set('height', String(height));
+
+    // Navigating an iframe at /api/dl triggers the browser's save dialog
+    // without leaving the page — same UX as the desktop Save file button.
+    const iframe = document.createElement('iframe');
+    iframe.src = `/api/dl?${params}`;
+    iframe.style.cssText = 'position:absolute;width:0;height:0;border:0;visibility:hidden';
+    document.body.appendChild(iframe);
+
+    let settled = false;
+    // probe: if the endpoint answers JSON (error), show it; a file stream never resolves as JSON
+    try {
+      const probe = await fetch(`/api/dl?${params}&probe=1`, { method: 'GET' });
+      const ct = probe.headers.get('content-type') || '';
+      if (probe.ok && ct.includes('application/json')) {
+        const j = await probe.json().catch(() => ({}));
+        settled = true;
+        iframe.remove();
+        fail(j.error || 'The stream failed.', j.hint);
+        return;
+      }
+    } catch {}
+
+    if (!settled) {
+      // assume the iframe is downloading; wait a bit then restore the button
+      setTimeout(() => {
+        const track = $('#track');
+        if (track) {
+          track.classList.remove('is-waiting');
+          $('#fill').style.width = '100%';
+          $('#stageLabel').textContent = 'Download handed to your browser';
+          $('#readout').textContent = '';
+          $('#detail').textContent = 'Saving the file now — watch your downloads.';
+          const dl = $('#dl'); if (dl) { dl.disabled = false; dl.textContent = 'Download again'; }
+        }
+      }, 1200);
+    }
+  }
+
   /* ---------- helpers ---------- */
 
   function fail(msg, hint) {
@@ -231,11 +290,7 @@
       </div>`;
   }
 
-  function cancelJob(kill) {
+  function teardown() {
     if (es) { es.close(); es = null; }
-    if (kill && jobId) {
-      fetch(`/api/jobs/${jobId}/cancel`, { method: 'POST' }).catch(() => {});
-    }
-    jobId = null;
   }
 })();

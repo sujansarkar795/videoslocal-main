@@ -88,7 +88,33 @@ Export with a "cookies.txt" browser extension, save as `cookies.txt` next to `se
 | `GET /api/file/:id` | download the finished file |
 | `GET /api/health` | engine + cookies status |
 
-## Deploy (VPS, domain, HTTPS)
+## Vercel serverless
+
+Vercel cannot run `server.js` (no long-running processes, no persistent disk, no
+spawning across requests), so the repo carries a parallel serverless surface:
+
+| File | Role |
+|---|---|
+| `api/health.js` | engine status (`yt-dlp --version`) |
+| `api/info.js` | resolve metadata (stateless, one `yt-dlp -J`) |
+| `api/dl.js` | **streams** the file to the browser via `Content-Disposition` |
+| `scripts/fetch-binaries.mjs` | postinstall: downloads the standalone yt-dlp into `api/bin/` (Linux/Vercel only) |
+
+The front end (`public/assets/tool.js`) detects the runtime from
+`/api/health` and switches flows automatically: job+SSE on a server, direct
+stream on serverless. No UI duplication.
+
+Limits of the serverless mode, by design: no progress percent (the function
+streams, it does not report), no cancel, no download folder, and function time
+caps long videos (Hobby 60s default; `maxDuration: 300` needs Pro). For
+full-length media and login-walled sources, self-host — the Docker section above
+still works unchanged.
+
+Deploy: push to GitHub, import in Vercel, framework preset **Other**, root
+directory `/`. `vercel.json` sets `maxDuration` per function; no extra env vars
+are required.
+
+## VPS deploy (Docker)
 
 Needs: a host with Docker + Compose, and DNS `A` records for `videoslocal.store` and
 `www.videoslocal.store` pointing at it. Ports 80 and 443 must be reachable — Caddy uses them to
