@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node server.js",
     "ads": "node scripts/set-ads.mjs",
-    "postinstall": "node scripts/fetch-binaries.mjs"
+    "postinstall": "node scripts/fetch-binaries.mjs || exit 0"
   },
   "dependencies": {
     "express": "^4.19.2"
