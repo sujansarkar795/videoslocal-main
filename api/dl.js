@@ -46,6 +46,9 @@ export default async function handler(req, res) {
     ...commonArgs(),
     ...authArgs(),
     ...(ffOk ? ['--ffmpeg-location', ffBin] : []),
+    // Piping an MP4 means no second pass and no seekable output: fragmented
+    // MP4 is the only form a player can open cleanly from a stream.
+    ...(ffOk ? ['--postprocessor-args', 'ffmpeg:-movflags frag_keyframe+empty_moov+default_base_moof'] : []),
     ...plan.args,
     url,
   ];
@@ -122,9 +125,12 @@ export default async function handler(req, res) {
 
   child.stdout.pipe(res);
 
-  // Client left (cancel / tab closed): stop the engine instead of burning the
-  // whole time budget on a download nobody is reading.
-  req.on('close', () => {
-    try { child.kill('SIGKILL'); } catch {}
+  // res, not req: req 'close' fires when the request body ends (immediately for
+  // a GET), which killed the engine a few KB short of the last chunk. Only a
+  // response that closes before it finished means the client actually left.
+  res.on('close', () => {
+    if (!res.writableEnded) {
+      try { child.kill('SIGKILL'); } catch {}
+    }
   });
 }
