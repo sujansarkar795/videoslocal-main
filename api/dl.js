@@ -8,7 +8,7 @@
  * the Content-Disposition download needs.
  */
 import { spawn } from 'node:child_process';
-import { ytPath, commonArgs, formatPlan, hintFor, run } from './_util.js';
+import { ytPath, commonArgs, formatPlan, hintFor, run, authArgs } from './_util.js';
 
 function slug(title, ext) {
   const t = String(title || 'video')
@@ -38,7 +38,7 @@ export default async function handler(req, res) {
   const ff = await run('ffmpeg', ['-version'], 8000);
   const plan = formatPlan(mode, height, ff.code === 0);
 
-  const args = ['--no-simulate', '-o', '-', ...commonArgs(), ...plan.args, url];
+  const args = ['--no-simulate', '-o', '-', ...commonArgs(), ...authArgs(), ...plan.args, url];
 
   let child;
   try {

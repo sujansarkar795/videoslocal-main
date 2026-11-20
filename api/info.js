@@ -3,7 +3,7 @@
  * { url } → { title, thumbnail, duration, uploader, site, heights[] }
  * One `yt-dlp -J`; metadata only, so it fits a function comfortably.
  */
-import { ytPath, run, tidyError, hintFor, commonArgs } from './_util.js';
+import { ytPath, run, tidyError, hintFor, commonArgs, authArgs } from './_util.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -23,7 +23,7 @@ export default async function handler(req, res) {
     return;
   }
 
-  const r = await run(ytPath(), ['-J', '--socket-timeout', '20', ...commonArgs(), url], 55000);
+  const r = await run(ytPath(), ['-J', '--socket-timeout', '20', ...commonArgs(), ...authArgs(), url], 55000);
 
   if (r.code !== 0) {
     res.status(422).json({

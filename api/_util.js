@@ -110,11 +110,54 @@ export function hintFor(text) {
     return 'The source is rate-limiting this server IP. Retry later; home and VPS IPs are throttled far less than cloud IPs.';
   if (/ffmpeg|merger/.test(t))
     return 'This format needs ffmpeg to merge audio and video, which this deploy does not ship. Pick a lower quality (a ready-mixed MP4) instead.';
+  if (/requested format is not available/.test(t))
+    return 'This server has no ffmpeg, so it cannot merge the separate video and audio streams. Serverless needs a ready-mixed format; use the desktop or VPS build for this one.';
   return null;
 }
 
 export function commonArgs() {
   return ['--no-playlist', '--no-warnings', '--no-mtime'];
+}
+
+/**
+ * Credentials and egress, both optional and both env-driven so a deployment can
+ * be fixed without a code change:
+ *   YT_COOKIES_B64  base64 of a Netscape cookies.txt (or YT_COOKIES = raw text)
+ *   YT_PROXY        proxy URL, e.g. http://user:pass@host:port
+ * YouTube walls datacenter IPs; cookies prove a real session, a proxy moves the
+ * request to an IP that is not flagged. Either one is enough on its own.
+ */
+const COOKIE_TMP = '/tmp/cookies.txt';
+
+export function authArgs() {
+  const args = [];
+
+  const b64 = (process.env.YT_COOKIES_B64 || '').trim();
+  const raw = (process.env.YT_COOKIES || '').trim();
+
+  if (b64 || raw) {
+    try {
+      if (!fs.existsSync(COOKIE_TMP)) {
+        const text = b64 ? Buffer.from(b64, 'base64').toString('utf8') : raw;
+        fs.writeFileSync(COOKIE_TMP, text, { mode: 0o600 });
+      }
+      if (fs.statSync(COOKIE_TMP).size > 20) args.push('--cookies', COOKIE_TMP);
+    } catch {}
+  }
+
+  const proxy = (process.env.YT_PROXY || '').trim();
+  if (proxy) args.push('--proxy', proxy);
+
+  return args;
+}
+
+export function authState() {
+  const b64 = (process.env.YT_COOKIES_B64 || '').trim();
+  const raw = (process.env.YT_COOKIES || '').trim();
+  return {
+    cookies: b64 || raw ? 'env' : null,
+    proxy: process.env.YT_PROXY ? 'env' : null,
+  };
 }
 
 /**

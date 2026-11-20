@@ -3,7 +3,7 @@
  * Reports the engine this function can actually reach, plus whether ffmpeg
  * exists (it decides merge vs progressive-only, see _util.formatPlan).
  */
-import { ytPath, run, binaryReport } from './_util.js';
+import { ytPath, run, binaryReport, authState } from './_util.js';
 
 export default async function handler(req, res) {
   const p = ytPath();
@@ -19,6 +19,7 @@ export default async function handler(req, res) {
     engine: ok ? { version: engine.out.trim(), cmd: p } : null,
     ffmpeg: ff.code === 0 ? (ff.out.split('\n')[0] || '').trim().slice(0, 80) : null,
     runtime: 'vercel-serverless',
+    auth: authState(),
     node: process.version,
     note: ok ? null : `yt-dlp did not run: ${(engine.err || '').split('\n').pop() || 'no output'} — ${binaryReport().chosen}`,
     paths: ok ? undefined : binaryReport(),
