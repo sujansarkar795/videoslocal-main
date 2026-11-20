@@ -68,7 +68,9 @@ case "$1" in
 esac
 EOS
 chmod +x /tmp/vl-askpass.sh
-if GIT_ASKPASS=/tmp/vl-askpass.sh GIT_TERMINAL_PROMPT=0 git push -u origin main; then
+# -c credential.helper= clears the Windows credential manager for this push only,
+# so the token from the askpass script is what authenticates.
+if GIT_ASKPASS=/tmp/vl-askpass.sh GIT_TERMINAL_PROMPT=0 git -c credential.helper= push -u origin main; then
   rm -f "$TOKEN_FILE"
   echo "token file deleted"
 else
