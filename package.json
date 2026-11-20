@@ -1,0 +1,14 @@
+{
+  "name": "videoslocal",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Self-hosted video downloader for YouTube, X, Instagram, Facebook, TikTok and ~1000 other sites.",
+  "scripts": {
+    "start": "node server.js",
+    "ads": "node scripts/set-ads.mjs"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

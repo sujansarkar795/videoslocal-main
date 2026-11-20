@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+# Creates videoslocal-main (private) and pushes the project.
+# The token is read from the OpenChamber secret file and never printed or stored.
+set -euo pipefail
+
+TOKEN_FILE="/c/Users/Lab/.config/openchamber/secrets/dc1a1af515d5d502d9b5a531e23b1744"
+REPO="videoslocal-main"
+ROOT="/c/Users/Public/Documents/videoslocal"
+
+[ -f "$TOKEN_FILE" ] || { echo "ERROR: token file missing"; exit 1; }
+TOKEN=$(tr -d '\r\n' < "$TOKEN_FILE")
+[ -n "$TOKEN" ] || { echo "ERROR: token file empty"; exit 1; }
+
+HDR=$(mktemp)
+trap 'rm -f "$HDR" "$RESP" /tmp/vl-askpass.sh' EXIT
+printf 'Authorization: Bearer %s\n' "$TOKEN" > "$HDR"
+printf 'Accept: application/vnd.github+json\n' >> "$HDR"
+
+RESP=$(mktemp)
+echo "== GitHub account =="
+STATUS=$(curl -s -o "$RESP" -w '%{http_code}' -H @/dev/null -H "Accept: application/vnd.github+json" https://api.github.com/user 2>/dev/null || true)
+STATUS=$(curl -s -o "$RESP" -w '%{http_code}' -H @"$HDR" https://api.github.com/user)
+if [ "$STATUS" != "200" ]; then
+  echo "token check failed (HTTP $STATUS):"
+  head -c 300 "$RESP"
+  exit 1
+fi
+LOGIN=$(grep -o '"login": *"[^"]*"' "$RESP" | head -1 | sed 's/.*"login": *"//;s/"//')
+UID_=$(grep -o '"id": *[0-9]*' "$RESP" | head -1 | sed 's/.*: //')
+echo "authenticated as: $LOGIN (id $UID_)"
+
+echo
+echo "== create repo =="
+STATUS=$(curl -s -o "$RESP" -w '%{http_code}' -X POST -H @"$HDR" \
+  -d "{\"name\":\"$REPO\",\"private\":true,\"has_wiki\":false,\"has_projects\":false,\"description\":\"Local video transfer desk built on yt-dlp — resolve a link, save the file to this machine.\"}" \
+  https://api.github.com/user/repos)
+echo "HTTP $STATUS"
+case "$STATUS" in
+  201) echo "created: $LOGIN/$REPO (private)";;
+  422) echo "already exists or name taken — continuing";;
+  *)   head -c 400 "$RESP"; echo; exit 1;;
+esac
+
+cd "$ROOT"
+echo
+echo "== git setup =="
+[ -d .git ] || git init -b main
+git branch -M main 2>/dev/null || true
+git config user.name  "$LOGIN"
+git config user.email "${UID_}+${LOGIN}@users.noreply.github.com"
+
+echo
+echo "== commit =="
+git add -A
+if git diff --cached --quiet; then
+  echo "nothing new to commit"
+else
+  git commit -m "videoslocal.store — self-hosted video transfer desk" -m "Express server driving yt-dlp + ffmpeg; static front end (transfer UI, guides, legal pages); consent-gated AdSense slots; Docker + Caddy deploy."
+fi
+git log --oneline -3 || true
+
+git remote remove origin 2>/dev/null || true
+git remote add origin "https://github.com/$LOGIN/$REPO.git"
+
+echo
+echo "== push (token via askpass, never stored) =="
+cat > /tmp/vl-askpass.sh <<'EOS'
+#!/bin/sh
+case "$1" in
+  Username*) echo "x-access-token" ;;
+  *) cat "/c/Users/Lab/.config/openchamber/secrets/dc1a1af515d5d502d9b5a531e23b1744" ;;
+esac
+EOS
+chmod +x /tmp/vl-askpass.sh
+if GIT_ASKPASS=/tmp/vl-askpass.sh GIT_TERMINAL_PROMPT=0 git push -u origin main; then
+  rm -f "$TOKEN_FILE"
+  echo "token file deleted"
+else
+  echo "PUSH FAILED — token file kept for a retry"
+  exit 1
+fi
+
+echo
+echo "== done =="
+git log --oneline -1
+git remote -v
+echo "repo: https://github.com/$LOGIN/$REPO"

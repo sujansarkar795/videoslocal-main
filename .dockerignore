@@ -1,0 +1,10 @@
+node_modules
+downloads
+cookies.txt
+.git
+.gitignore
+*.log
+server.err
+deploy
+scripts
+**/*.png

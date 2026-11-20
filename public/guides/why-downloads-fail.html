@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Why a download fails, and what cookies actually do — videoslocal.store</title>
+<meta name="description" content="Sign-in walls, session cookies, rate limits, DRM and stale extractors: a plain explanation of every error a video downloader will hand you, and what each one means.">
+<link rel="canonical" href="https://videoslocal.store/guides/why-downloads-fail">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Why a download fails, and what cookies actually do">
+<meta property="og:description" content="A plain explanation of the errors you will meet, and which ones are fixable.">
+<meta property="og:url" content="https://videoslocal.store/guides/why-downloads-fail">
+<meta name="theme-color" content="#0e0e12">
+<meta name="adsense-client" content="ca-pub-XXXXXXXXXXXXXXXX">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400..900&family=Fragment+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css?v=17">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Article","headline":"Why a download fails, and what cookies actually do","datePublished":"2026-11-19","dateModified":"2026-11-19","author":{"@type":"Organization","name":"videoslocal.store"},"publisher":{"@type":"Organization","name":"videoslocal.store"},"mainEntityOfPage":"https://videoslocal.store/guides/why-downloads-fail"}
+</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="top">
+  <div class="wrap toprow">
+    <a class="brand" href="/" aria-label="videoslocal.store, home">videoslocal<em>.store</em></a>
+    <nav class="nav" aria-label="Primary">
+      <a href="/">Download</a>
+      <a href="/guides" aria-current="page">Guides</a>
+      <a href="/about">About</a>
+      <a href="/terms">Terms</a>
+    </nav>
+    <span class="engine" id="engineNote"><i class="led"></i>engine · checking</span>
+  </div>
+</header>
+
+<main id="main">
+  <article class="article">
+    <div class="wrap">
+      <header class="article-head">
+        <p class="kicker">Technical</p>
+        <h1>Why a download fails, and what cookies actually do</h1>
+        <p class="byline"><span>The desk</span><span>19 November 2026</span><span>6 min read</span></p>
+      </header>
+
+      <div class="prose">
+        <p>A downloader is a small program that asks a platform the same questions a browser asks, and then saves the answer instead of playing it. Almost every failure is one of those questions being refused. Sorting the refusals into four families turns a wall of red text into a decision.</p>
+
+        <h2>Family one: the work is not there</h2>
+        <p><code>This video is unavailable</code>, <code>private video</code>, <code>removed by the uploader</code>, <code>not available in your country</code>. Nothing is broken on your side. The platform will not serve the file to anyone without the right relationship to it — the uploader's permission, a session, or a network location inside the licensed territory.</p>
+        <p>Check the link in a normal browser, signed out. If it does not play there either, the desk cannot help. A private video is a permissions problem, not a formatting problem.</p>
+
+        <h2>Family two: the platform wants a session</h2>
+        <p>Instagram, Facebook, X and parts of YouTube increasingly require a logged-in session before they serve media. To the platform, "logged in" means a cookie — a small token your browser presents with each request, issued after you proved you were you.</p>
+        <p>A cookie file is that token, exported. You can produce one with a browser extension that writes Netscape-format cookies, save it next to the desk as <code>cookies.txt</code>, and restart. The desk now asks its questions as you.</p>
+        <ul>
+          <li><strong>Use a session you are comfortable exporting.</strong> A cookie is a credential: anyone holding it can act as that session until it expires or you sign out everywhere.</li>
+          <li><strong>Export only the site you need.</strong> Some extensions dump cookies for every domain; trim the file to the platform in question.</li>
+          <li><strong>Re-export when it stops working.</strong> Sessions expire, and a stale cookie produces exactly the same "login required" error as no cookie at all.</li>
+        </ul>
+
+        <blockquote>A cookie is a borrowed key. Borrow it for one door, keep it in one place, and throw it away when you are done.</blockquote>
+
+        <h2>Family three: you are being rate-limited</h2>
+        <p><code>HTTP Error 429</code>, <code>too many requests</code>, or a sudden run of failures after a long queue. Platforms meter requests per address, and a home connection that pulls forty videos in ten minutes looks like a scraper. The fix is patience, not cleverness: wait, lower concurrency, and download in batches you would be comfortable explaining.</p>
+        <p>This is also why public download sites break constantly and why a local desk is more stable — you are one address with one ordinary pattern, not ten thousand strangers sharing one reputation.</p>
+
+        <aside class="ad" style="--ad-h:280px" aria-label="Advertisement">
+          <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="0000000000" data-ad-format="auto" data-full-width-responsive="true"></ins>
+          <div class="ad-fill">Ad space · in-article</div>
+        </aside>
+
+        <h2>Family four: the file is protected, or the tool is stale</h2>
+        <p>Two different problems share a symptom.</p>
+        <p><strong>DRM.</strong> Subscription services wrap video in Widevine, FairPlay or PlayReady. The bytes on the wire are encrypted and the key is issued only to a licensed player. No cookie, header or flag changes that, and a tool that claims otherwise is either breaking the law or selling you malware. This desk declines DRM-protected sources outright.</p>
+        <p><strong>Stale extractors.</strong> A platform renames a field and the extraction recipe stops matching. The engine reports something cryptic and every link to that site fails at once. The cure is a one-line update — <code>py -m pip install -U yt-dlp</code> — because the project ships fixes within days of a break.</p>
+
+        <h2>Reading the message instead of the wall</h2>
+        <p>Errors arrive with a prefix and a sentence. The prefix tells you where to look:</p>
+        <table>
+          <thead><tr><th>Message begins with</th><th>Meaning</th><th>What to do</th></tr></thead>
+          <tbody>
+            <tr><td><code>[youtube] … unavailable</code></td><td>The item is gone or gated</td><td>Verify in a browser, signed out</td></tr>
+            <tr><td><code>Sign in to confirm…</code></td><td>Session required</td><td>Add a fresh <code>cookies.txt</code></td></tr>
+            <tr><td><code>HTTP Error 429</code></td><td>Rate limited</td><td>Wait; reduce the batch</td></tr>
+            <tr><td><code>Requested format is not available</code></td><td>That resolution is not offered</td><td>Pick a lower rung or best</td></tr>
+            <tr><td><code>Unsupported URL</code></td><td>Not a single video page</td><td>Open the item and copy its own link</td></tr>
+          </tbody>
+        </table>
+
+        <div class="note">
+          <strong>If it worked yesterday</strong>
+          Nothing about your machine changed. Either the session expired or the platform moved a field. Refresh the cookie file first, update the engine second; those two steps resolve the large majority of sudden failures.
+        </div>
+
+        <h2>The short version</h2>
+        <p>Unavailable means unavailable. Login walls are solved with your own session, exported deliberately and kept briefly. Rate limits are solved with patience. DRM is not solved at all, and a tool that says otherwise is lying. Everything else is usually a stale engine waiting for one update.</p>
+      </div>
+
+      <nav class="related" aria-label="Related notes">
+        <h2>Related</h2>
+        <ul>
+          <li><a href="/guides/keep-your-own-videos">A backup routine for the videos you own <span>Practice</span></a></li>
+          <li><a href="/guides/fair-use-and-downloads">Fair use, licensing, and the line between backup and republishing <span>Rights</span></a></li>
+          <li><a href="/about">How the engine is wired <span>About</span></a></li>
+        </ul>
+      </nav>
+    </div>
+  </article>
+</main>
+
+<footer class="foot">
+  <div class="wrap footgrid">
+    <div>
+      <div class="foot-mark">videoslocal<span>.store</span></div>
+      <p class="small">A local transfer desk for video you have the right to keep. Built on yt-dlp and ffmpeg; nothing is uploaded anywhere.</p>
+    </div>
+    <div>
+      <h4>Index</h4>
+      <ul>
+        <li><a href="/">Download</a></li>
+        <li><a href="/guides">Guides</a></li>
+        <li><a href="/about">About</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Legal</h4>
+      <ul>
+        <li><a href="/privacy">Privacy</a></li>
+        <li><a href="/terms">Terms</a></li>
+        <li><a href="/terms#dmca">DMCA</a></li>
+        <li><a href="/contact">Contact</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Advertising</h4>
+      <p class="small">Supported by advertising served by Google. <a href="/privacy#ads" style="color:inherit">Ad choices</a> · <a href="#" data-consent-open style="color:inherit">Consent settings</a></p>
+    </div>
+  </div>
+  <div class="wrap footbar">
+    <span>© 2026 videoslocal.store</span>
+    <span>Personal use only — respect creators' rights</span>
+  </div>
+</footer>
+
+<div class="consent" id="consent" hidden>
+  <div class="consent-inner">
+    <p><strong>Cookies.</strong> Essential storage remembers this choice. With your permission, Google AdSense may set advertising and measurement cookies. <a href="/privacy#ads">Details</a>.</p>
+    <div class="consent-actions">
+      <button class="btn btn-quiet" type="button" data-consent="essential">Essential only</button>
+      <button class="btn btn-ink" type="button" data-consent="all">Accept all</button>
+    </div>
+  </div>
+</div>
+
+<script src="/assets/consent.js?v=17"></script>
+<script src="/assets/ads.js?v=17"></script>
+<script src="/assets/status.js?v=17"></script>
+</body>
+</html>

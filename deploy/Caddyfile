@@ -1,0 +1,24 @@
+# videoslocal.store
+# Caddy obtains and renews the certificate automatically; DNS must point here first.
+
+videoslocal.store, www.videoslocal.store {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	# static files and the API both live in the app
+	reverse_proxy app:4173
+
+	log {
+		output file /data/access.log {
+			roll_size 20MiB
+			roll_keep 5
+		}
+		format json
+	}
+}

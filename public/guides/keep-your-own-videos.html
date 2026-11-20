@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>A backup routine for the videos you own — videoslocal.store</title>
+<meta name="description" content="Accounts get locked, hacked and deleted. A quarterly export routine that survives all three: what to keep, how to name it, and how to prove the copy still plays.">
+<link rel="canonical" href="https://videoslocal.store/guides/keep-your-own-videos">
+<meta property="og:type" content="article">
+<meta property="og:title" content="A backup routine for the videos you own">
+<meta property="og:description" content="What to export, how to name it, and the restore test almost everyone skips.">
+<meta property="og:url" content="https://videoslocal.store/guides/keep-your-own-videos">
+<meta name="theme-color" content="#0e0e12">
+<meta name="adsense-client" content="ca-pub-XXXXXXXXXXXXXXXX">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400..900&family=Fragment+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css?v=17">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Article","headline":"A backup routine for the videos you own","datePublished":"2026-11-19","dateModified":"2026-11-19","author":{"@type":"Organization","name":"videoslocal.store"},"publisher":{"@type":"Organization","name":"videoslocal.store"},"mainEntityOfPage":"https://videoslocal.store/guides/keep-your-own-videos"}
+</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="top">
+  <div class="wrap toprow">
+    <a class="brand" href="/" aria-label="videoslocal.store, home">videoslocal<em>.store</em></a>
+    <nav class="nav" aria-label="Primary">
+      <a href="/">Download</a>
+      <a href="/guides" aria-current="page">Guides</a>
+      <a href="/about">About</a>
+      <a href="/terms">Terms</a>
+    </nav>
+    <span class="engine" id="engineNote"><i class="led"></i>engine · checking</span>
+  </div>
+</header>
+
+<main id="main">
+  <article class="article">
+    <div class="wrap">
+      <header class="article-head">
+        <p class="kicker">Practice</p>
+        <h1>A backup routine for the videos you own</h1>
+        <p class="byline"><span>The desk</span><span>19 November 2026</span><span>9 min read</span></p>
+      </header>
+
+      <div class="prose">
+        <p>Every creator eventually meets the same afternoon: the account is gone, or the phone with the only original is gone, or the platform quietly changed what it keeps. The work was never on the platform. It was on a laptop in 2021, and that laptop has since been sold. This is the routine that prevents that afternoon — deliberately boring, four times a year, and short enough that you will actually do it.</p>
+
+        <h2>1. Treat the platform as distribution, not storage</h2>
+        <p>An upload is a copy the platform controls. It is re-encoded to whatever bitrate the platform prefers this year, it can be removed without notice, and it disappears entirely if the account does. None of that is a conspiracy; it is just what a distribution channel is. The same is true of cloud photo libraries and "unlimited" storage plans whose terms change after the launch event.</p>
+        <p>There is a second, subtler loss: the copy you download back from a platform is the platform's version of your work, not yours. The file that left your editor had a master bitrate, a colour profile and often a different edit. If you only ever re-download, you are archiving a photocopy of a photocopy.</p>
+
+        <blockquote>Keep the master you exported. The platform's copy is a distribution artefact, not an archive.</blockquote>
+
+        <h2>2. Decide what a "video" actually includes</h2>
+        <p>The video file alone is the least interesting part of the record. A complete item is a small bundle:</p>
+        <ul>
+          <li><strong>The master file</strong> — the highest-quality export you still have, not the upload.</li>
+          <li><strong>Captions</strong> — as <code>.srt</code> or <code>.vtt</code>, including translations. Re-transcribing costs money; captions are cheap to keep.</li>
+          <li><strong>Thumbnail and cover art</strong> — at the resolution you designed, not the platform's 720px squeeze.</li>
+          <li><strong>Description, credits, links</strong> — the text that made the video findable and the people who made it credited.</li>
+          <li><strong>Provenance</strong> — upload date, platform, video id, and the licence terms you published under.</li>
+        </ul>
+        <p>A plain-text file beside the video covers the last point in about six lines. Future-you will not remember which year the series started.</p>
+
+        <h2>3. Three copies, two kinds of media, one off-site</h2>
+        <p>The old 3-2-1 rule survives because it is cheap: three copies, on at least two kinds of storage, with one somewhere that burns down separately from your desk. In practice, for a working creator, that looks like a working drive, a second drive kept elsewhere, and an object-storage bucket or a friend's NAS.</p>
+        <p>The most common mistake is not a lack of drives — it is a lack of <em>supervision</em>. A drive that is never mounted is not a backup; it is a rumour. Put a reminder in the calendar, mount it, copy, unmount.</p>
+
+        <h2>4. Name files so they sort themselves</h2>
+        <p>Filenames are the cheapest database you will ever maintain. A stable pattern pays for itself the first time you need to find one clip in a folder of four hundred:</p>
+        <p><code>2026-11-19_kitchen-table-ep12_yt-aqzKEbpKQ_1080p.mp4</code></p>
+        <p>Date first — lexicographic order becomes chronological order. Then a human slug, then platform and id so the source is always recoverable, then the resolution. No spaces, no "final_v2".</p>
+
+        <aside class="ad" style="--ad-h:280px" aria-label="Advertisement">
+          <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="0000000000" data-ad-format="auto" data-full-width-responsive="true"></ins>
+          <div class="ad-fill">Ad space · in-article</div>
+        </aside>
+
+        <h2>5. Put it on a calendar, not on a mood</h2>
+        <p>Four dates a year is enough for most publishing schedules:</p>
+        <ol>
+          <li><strong>Monthly</strong> — export new uploads from every platform you published to. Fifteen minutes.</li>
+          <li><strong>Quarterly</strong> — audit the folder: anything published but not archived, anything archived twice, anything whose captions are missing.</li>
+          <li><strong>Before any rebrand or move</strong> — full export, including the old profile text. Handles and bios are part of the record.</li>
+          <li><strong>Yearly</strong> — copy the whole archive to the off-site location and verify it there.</li>
+        </ol>
+        <p>Also export when a platform announces a shutdown, a merger, or a change to its API. Announcements are the only warning you get.</p>
+
+        <h2>6. Verify, or you have hope rather than a backup</h2>
+        <p>Two checks take minutes and catch almost every failure:</p>
+        <ul>
+          <li><strong>Checksums.</strong> Generate a SHA-256 for each master and keep the list with the archive. A checksum proves the file on the far drive is the file you made, not a truncated copy from an interrupted transfer.</li>
+          <li><strong>A play test.</strong> One file per batch, on a machine that is not the one that made it. Codec support moves; a file that opens today may not open after your next OS upgrade.</li>
+        </ul>
+
+        <div class="note">
+          <strong>The part everyone skips</strong>
+          Restore something. Not a test file — a real one, from the off-site copy, onto a clean machine, once a year. A backup you have never restored from is an assumption with a filename.
+        </div>
+
+        <h2>7. The short version</h2>
+        <p>Master files, not platform re-encodes. Captions and thumbnails beside them. Dates first in the filename. Three copies, one of them elsewhere. A quarterly audit, a yearly restore. It is not glamorous, and that is the point: the routine is supposed to be forgettable, so that losing an account is an inconvenience rather than an ending.</p>
+        <p>If your work also lives on a platform you no longer trust to keep it, the desk on the <a href="/">front page</a> will pull your own uploads back down so you can fold them into the same archive.</p>
+      </div>
+
+      <nav class="related" aria-label="Related notes">
+        <h2>Related</h2>
+        <ul>
+          <li><a href="/guides/fair-use-and-downloads">Fair use, licensing, and the line between backup and republishing <span>Rights</span></a></li>
+          <li><a href="/guides/why-downloads-fail">Why a download fails, and what cookies actually do <span>Technical</span></a></li>
+          <li><a href="/about">How this desk is built <span>About</span></a></li>
+        </ul>
+      </nav>
+    </div>
+  </article>
+</main>
+
+<footer class="foot">
+  <div class="wrap footgrid">
+    <div>
+      <div class="foot-mark">videoslocal<span>.store</span></div>
+      <p class="small">A local transfer desk for video you have the right to keep. Built on yt-dlp and ffmpeg; nothing is uploaded anywhere.</p>
+    </div>
+    <div>
+      <h4>Index</h4>
+      <ul>
+        <li><a href="/">Download</a></li>
+        <li><a href="/guides">Guides</a></li>
+        <li><a href="/about">About</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Legal</h4>
+      <ul>
+        <li><a href="/privacy">Privacy</a></li>
+        <li><a href="/terms">Terms</a></li>
+        <li><a href="/terms#dmca">DMCA</a></li>
+        <li><a href="/contact">Contact</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Advertising</h4>
+      <p class="small">Supported by advertising served by Google. <a href="/privacy#ads" style="color:inherit">Ad choices</a> · <a href="#" data-consent-open style="color:inherit">Consent settings</a></p>
+    </div>
+  </div>
+  <div class="wrap footbar">
+    <span>© 2026 videoslocal.store</span>
+    <span>Personal use only — respect creators' rights</span>
+  </div>
+</footer>
+
+<div class="consent" id="consent" hidden>
+  <div class="consent-inner">
+    <p><strong>Cookies.</strong> Essential storage remembers this choice. With your permission, Google AdSense may set advertising and measurement cookies. <a href="/privacy#ads">Details</a>.</p>
+    <div class="consent-actions">
+      <button class="btn btn-quiet" type="button" data-consent="essential">Essential only</button>
+      <button class="btn btn-ink" type="button" data-consent="all">Accept all</button>
+    </div>
+  </div>
+</div>
+
+<script src="/assets/consent.js?v=17"></script>
+<script src="/assets/ads.js?v=17"></script>
+<script src="/assets/status.js?v=17"></script>
+</body>
+</html>

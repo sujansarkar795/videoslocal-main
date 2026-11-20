@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>videoslocal.store — download a video to this machine</title>
+<meta name="description" content="Paste a link and save the file. A quiet, self-hosted transfer tool for your own uploads, licensed footage and public-domain video from YouTube, X, Instagram, Facebook, TikTok and about a thousand more sites.">
+<link rel="canonical" href="https://videoslocal.store/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="videoslocal.store">
+<meta property="og:title" content="videoslocal.store — download a video">
+<meta property="og:description" content="Paste a link. It resolves here and saves the file to this machine.">
+<meta property="og:url" content="https://videoslocal.store/">
+<meta name="theme-color" content="#0e0e12">
+<meta name="adsense-client" content="ca-pub-XXXXXXXXXXXXXXXX">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400..900&family=Fragment+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css?v=17">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "videoslocal.store",
+  "url": "https://videoslocal.store/",
+  "description": "A self-hosted transfer tool for video you have the right to keep.",
+  "inLanguage": "en"
+}
+</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="top">
+  <div class="wrap toprow">
+    <a class="brand" href="/" aria-label="videoslocal.store, home">videoslocal<em>.store</em></a>
+    <nav class="nav" aria-label="Primary">
+      <a href="/" aria-current="page">Download</a>
+      <a href="/guides">Guides</a>
+      <a href="/about">About</a>
+      <a href="/terms">Terms</a>
+    </nav>
+    <span class="engine" id="engineNote"><i class="led"></i>checking engine</span>
+  </div>
+</header>
+
+<main id="main">
+  <div class="wrap">
+    <section class="intro">
+      <h1>Download a video</h1>
+      <p>Paste a link. It resolves here and saves the file to this machine — nothing is uploaded, nothing is stored for you.</p>
+    </section>
+
+    <section class="panel" aria-label="Download">
+      <form id="form" novalidate>
+        <div class="field">
+          <label for="url">Video link</label>
+          <div class="row">
+            <input class="input" id="url" name="url" type="url" inputmode="url" placeholder="https://" autocomplete="off" spellcheck="false" autofocus>
+            <button type="button" class="btn" id="paste">Paste</button>
+            <button type="submit" class="btn btn-solid" id="go">Check link</button>
+          </div>
+          <p class="hint">YouTube, X, Instagram, Facebook, TikTok, Vimeo, Reddit, SoundCloud and about a thousand more. Login-walled links need a local <code>cookies.txt</code>.</p>
+        </div>
+      </form>
+      <div id="slot" aria-live="polite"></div>
+    </section>
+
+    <section class="section">
+      <h2>Notes</h2>
+      <ul class="rows">
+        <li>
+          <a href="/guides/keep-your-own-videos">
+            <span>
+              <span class="row-title">A backup routine for the videos you own</span>
+              <span class="row-sub">What to keep, how to name it, and the restore test almost everyone skips.</span>
+            </span>
+            <span class="row-note">9 min</span>
+          </a>
+        </li>
+        <li>
+          <a href="/guides/fair-use-and-downloads">
+            <span>
+              <span class="row-title">Fair use, licensing, and the line between backup and republishing</span>
+              <span class="row-sub">Two rulebooks apply to every download. Which one you are crossing changes what is safe.</span>
+            </span>
+            <span class="row-note">7 min</span>
+          </a>
+        </li>
+        <li>
+          <a href="/guides/why-downloads-fail">
+            <span>
+              <span class="row-title">Why a download fails, and what cookies actually do</span>
+              <span class="row-sub">Sign-in walls, session tokens, rate limits and DRM, explained without the drama.</span>
+            </span>
+            <span class="row-note">6 min</span>
+          </a>
+        </li>
+      </ul>
+    </section>
+
+    <aside class="ad" style="--ad-h:250px" aria-label="Advertisement">
+      <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="0000000000" data-ad-format="auto" data-full-width-responsive="true"></ins>
+      <div class="ad-fill">Ad space</div>
+    </aside>
+
+    <section class="section qa">
+      <h2>Questions</h2>
+      <h3>Which sites does it handle?</h3>
+      <p>Whatever the current yt-dlp release supports — around a thousand extractors, with reliable coverage of YouTube, X, Instagram, Facebook, TikTok, Vimeo, Reddit, SoundCloud and Twitch. When a platform changes its plumbing, <code>py -m pip install -U yt-dlp</code> fixes the tool.</p>
+
+      <h3>Where does the file go?</h3>
+      <p>Into <code>./downloads</code> on the machine running the tool. It is served back over the local address only, and the folder is cleared after six hours. No cloud bucket, no account, no copy anywhere else.</p>
+
+      <h3>Is downloading legal?</h3>
+      <p>It depends on the work and where you live. Keeping a copy of your own upload, licensed footage or a public-domain film is ordinary. Republishing someone else's video is a different act with a different answer. The <a href="/guides/fair-use-and-downloads">rights note</a> walks through the distinction; it is reading, not legal advice.</p>
+
+      <h3>Why does a link sometimes ask for a login?</h3>
+      <p>Private, age-gated and region-locked posts are only visible to a session the platform trusts. The tool can reuse a browser session you export yourself, but it will never guess credentials or bypass DRM. The <a href="/guides/why-downloads-fail">failure guide</a> explains the errors you will meet.</p>
+    </section>
+  </div>
+</main>
+
+<footer class="foot">
+  <div class="wrap footgrid">
+    <div class="foot-brand">
+      <div class="foot-mark">videoslocal<span>.store</span></div>
+      <p class="small">A local transfer tool for video you have the right to keep. Built on yt-dlp and ffmpeg.</p>
+    </div>
+    <div>
+      <h4>Index</h4>
+      <ul>
+        <li><a href="/">Download</a></li>
+        <li><a href="/guides">Guides</a></li>
+        <li><a href="/about">About</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Legal</h4>
+      <ul>
+        <li><a href="/privacy">Privacy</a></li>
+        <li><a href="/terms">Terms</a></li>
+        <li><a href="/terms#dmca">DMCA</a></li>
+        <li><a href="/contact">Contact</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Advertising</h4>
+      <p class="small">Supported by advertising served by Google. <a href="/privacy#ads" style="color:inherit">Ad choices</a> · <a href="#" data-consent-open style="color:inherit">Consent settings</a></p>
+    </div>
+  </div>
+  <div class="wrap footbar">
+    <span>© 2026 videoslocal.store</span>
+    <span>Personal use only. Respect creators' rights.</span>
+  </div>
+</footer>
+
+<div class="consent" id="consent" hidden>
+  <div class="consent-inner">
+    <p><strong>Cookies.</strong> Essential storage remembers this choice. With your permission, Google AdSense may set advertising and measurement cookies. <a href="/privacy#ads">Details</a>.</p>
+    <div class="consent-actions">
+      <button class="btn" type="button" data-consent="essential">Essential only</button>
+      <button class="btn btn-solid" type="button" data-consent="all">Accept all</button>
+    </div>
+  </div>
+</div>
+
+<script src="/assets/consent.js?v=17"></script>
+<script src="/assets/ads.js?v=17"></script>
+<script src="/assets/status.js?v=17"></script>
+<script src="/assets/tool.js?v=17"></script>
+</body>
+</html>

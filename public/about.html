@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>About the desk — videoslocal.store</title>
+<meta name="description" content="How videoslocal.store works: a small local transfer desk built on yt-dlp and ffmpeg, run by one person, funded by advertising, with an editorial standard and a correction policy.">
+<link rel="canonical" href="https://videoslocal.store/about">
+<meta property="og:type" content="website">
+<meta property="og:title" content="About the desk">
+<meta property="og:description" content="A small local transfer desk built on yt-dlp and ffmpeg.">
+<meta property="og:url" content="https://videoslocal.store/about">
+<meta name="theme-color" content="#0e0e12">
+<meta name="adsense-client" content="ca-pub-XXXXXXXXXXXXXXXX">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400..900&family=Fragment+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css?v=17">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="top">
+  <div class="wrap toprow">
+    <a class="brand" href="/" aria-label="videoslocal.store, home">videoslocal<em>.store</em></a>
+    <nav class="nav" aria-label="Primary">
+      <a href="/">Download</a>
+      <a href="/guides">Guides</a>
+      <a href="/about" aria-current="page">About</a>
+      <a href="/terms">Terms</a>
+    </nav>
+    <span class="engine" id="engineNote"><i class="led"></i>engine · checking</span>
+  </div>
+</header>
+
+<main id="main">
+  <section class="doc">
+    <div class="wrap">
+      <header class="doc-head">
+        <p class="kicker">About</p>
+        <h1>A small desk, run on purpose</h1>
+        <p>videoslocal.store is a transfer desk for video you have the right to keep. It is one person, a static page and a very good command-line tool.</p>
+      </header>
+
+      <div class="doc-body">
+        <h2 id="what">What it is</h2>
+        <p>The desk takes a link, resolves it with <a href="https://github.com/yt-dlp/yt-dlp" rel="noopener nofollow">yt-dlp</a>, shows you the spec sheet — source, title, duration, available formats — and then saves the file with <a href="https://ffmpeg.org/" rel="noopener nofollow">ffmpeg</a> doing the muxing. Resolution, format and container are your choice, not an algorithm's.</p>
+        <p>Nothing is uploaded. There is no account, no queue in the cloud, no copy of your file on a server somewhere. The engine runs where the files land, and the download folder is cleared on a timer.</p>
+
+        <h2 id="why">Why it exists</h2>
+        <p>Because the alternatives are unpleasant in three predictable ways. Public download sites are ad walls that proxy your traffic through someone else's infrastructure. Browser extensions ask for permission to read every page you visit. Screen recording is a lossy compromise that produces a worse file than the one you started with.</p>
+        <p>A local desk is the boring answer: one process, one folder, one log line per transfer. It is also the only version of this tool that does not need to know who you are.</p>
+
+        <h2 id="limits">What it will not do</h2>
+        <p>It will not bypass DRM, guess credentials, or fetch something the platform is contractually required to gate. Subscription services encrypt their streams and licence the keys to approved players; this desk declines those sources rather than pretending otherwise. It will not batch-scrape a catalog, either — the rate limits are real, and a pattern that looks like abuse gets the desk throttled.</p>
+
+        <h2 id="funding">How it is funded</h2>
+        <p>Advertising, served by Google, on the pages where it does not interrupt the work. No accounts to sell, no analytics profile to compile, no data broker in the chain. If advertising is turned off in your browser or declined in the consent panel, the desk works exactly the same.</p>
+
+        <h2 id="editorial">Editorial standard</h2>
+        <p>The guides are written to be checkable: a rule as written, a command you can run, an error you can reproduce. We avoid confident legal claims, name the jurisdiction when it matters, and mark opinion as opinion. Where we get something wrong, we correct the page and note the correction rather than editing it away.</p>
+
+        <h2 id="who">Who runs it</h2>
+        <p>An independent developer. No company behind the curtain, no parent platform, no affiliate network steering the recommendations. Correspondence goes to a human who reads it.</p>
+
+        <h2 id="contact">Contact</h2>
+        <p>General: <a href="mailto:hello@videoslocal.store">hello@videoslocal.store</a><br>
+           Rights and takedown: <a href="mailto:dmca@videoslocal.store">dmca@videoslocal.store</a><br>
+           Privacy: <a href="mailto:privacy@videoslocal.store">privacy@videoslocal.store</a></p>
+        <p>The full procedure for rights complaints is in the <a href="/terms#dmca">terms</a>. The <a href="/contact">contact page</a> lists response expectations.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap footgrid">
+    <div>
+      <div class="foot-mark">videoslocal<span>.store</span></div>
+      <p class="small">A local transfer desk for video you have the right to keep. Built on yt-dlp and ffmpeg; nothing is uploaded anywhere.</p>
+    </div>
+    <div>
+      <h4>Index</h4>
+      <ul>
+        <li><a href="/">Download</a></li>
+        <li><a href="/guides">Guides</a></li>
+        <li><a href="/about">About</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Legal</h4>
+      <ul>
+        <li><a href="/privacy">Privacy</a></li>
+        <li><a href="/terms">Terms</a></li>
+        <li><a href="/terms#dmca">DMCA</a></li>
+        <li><a href="/contact">Contact</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>Advertising</h4>
+      <p class="small">Supported by advertising served by Google. <a href="/privacy#ads" style="color:inherit">Ad choices</a> · <a href="#" data-consent-open style="color:inherit">Consent settings</a></p>
+    </div>
+  </div>
+  <div class="wrap footbar">
+    <span>© 2026 videoslocal.store</span>
+    <span>Personal use only — respect creators' rights</span>
+  </div>
+</footer>
+
+<div class="consent" id="consent" hidden>
+  <div class="consent-inner">
+    <p><strong>Cookies.</strong> Essential storage remembers this choice. With your permission, Google AdSense may set advertising and measurement cookies. <a href="/privacy#ads">Details</a>.</p>
+    <div class="consent-actions">
+      <button class="btn btn-quiet" type="button" data-consent="essential">Essential only</button>
+      <button class="btn btn-ink" type="button" data-consent="all">Accept all</button>
+    </div>
+  </div>
+</div>
+
+<script src="/assets/consent.js?v=17"></script>
+<script src="/assets/ads.js?v=17"></script>
+<script src="/assets/status.js?v=17"></script>
+</body>
+</html>
