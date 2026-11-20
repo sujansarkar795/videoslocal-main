@@ -5,7 +5,8 @@
   "functions": {
     "api/health.js": { "maxDuration": 30, "includeFiles": "api/bin/**" },
     "api/info.js": { "maxDuration": 60, "includeFiles": "api/bin/**" },
-    "api/dl.js": { "maxDuration": 300, "includeFiles": "api/bin/**" }
+    "api/dl.js": { "maxDuration": 300, "includeFiles": "api/bin/**" },
+    "api/probe.js": { "maxDuration": 60, "includeFiles": "api/bin/**" }
   },
   "headers": [
     {
