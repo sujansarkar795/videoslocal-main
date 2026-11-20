@@ -1,19 +1,26 @@
 /**
  * GET /api/health — serverless variant.
- * Reports which engine this deployment can actually reach.
+ * Reports the engine this function can actually reach, plus whether ffmpeg
+ * exists (it decides merge vs progressive-only, see _util.formatPlan).
  */
-const { ytPath, run } = require('./_util.js');
+import { ytPath, run, binaryReport } from './_util.js';
 
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   const p = ytPath();
-  const r = await run(p, ['--version'], 20000);
-  const ok = r.code === 0 && /^\d{4}\./.test(r.out.trim());
+  const [engine, ff] = await Promise.all([
+    run(p, ['--version'], 20000),
+    run('ffmpeg', ['-version'], 10000),
+  ]);
+
+  const ok = engine.code === 0 && /^\d{4}\./.test(engine.out.trim());
+
   res.status(200).json({
     ok,
-    engine: ok ? { version: r.out.trim(), cmd: p } : null,
+    engine: ok ? { version: engine.out.trim(), cmd: p } : null,
+    ffmpeg: ff.code === 0 ? (ff.out.split('\n')[0] || '').trim().slice(0, 80) : null,
     runtime: 'vercel-serverless',
-    note: ok
-      ? null
-      : 'yt-dlp binary missing from this deployment — check the build log for fetch-binaries output.',
+    node: process.version,
+    note: ok ? null : `yt-dlp did not run: ${(engine.err || '').split('\n').pop() || 'no output'} — ${binaryReport().chosen}`,
+    paths: ok ? undefined : binaryReport(),
   });
-};
+}

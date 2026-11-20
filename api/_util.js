@@ -1,25 +1,45 @@
 /**
  * Shared plumbing for the serverless endpoints.
- * Plain CommonJS: Vercel's Node builder treats api/* as functions only when
- * they export a handler; a helper module must not look like one. This file is
- * excluded from builds via vercel.json and imported directly by the endpoints.
+ * ESM on purpose: package.json is `"type": "module"`, so a CommonJS file here
+ * is parsed as ESM and dies on `module.exports` before the handler runs.
  */
-const { spawn } = require('node:child_process');
-const fs = require('node:fs');
-const path = require('node:path');
+import { spawn } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
 
-const HERE = __dirname;
+/* The bundler keeps includeFiles relative to the project root, so the binary
+ * can land in a couple of places depending on how Vercel packs the function.
+ * Try each, then fall back to PATH. */
+const CANDIDATES = [
+  path.join(process.cwd(), 'api', 'bin', 'yt-dlp'),
+  path.join(process.cwd(), 'bin', 'yt-dlp'),
+  '/var/task/api/bin/yt-dlp',
+  '/var/task/bin/yt-dlp',
+  '/usr/local/bin/yt-dlp',
+  '/usr/bin/yt-dlp',
+];
 
-function ytPath() {
-  // scripts/fetch-binaries.mjs (postinstall) downloads the standalone binary here
-  const p = path.join(HERE, 'bin', 'yt-dlp');
-  try {
-    fs.chmodSync(p, 0o755);
-  } catch {}
-  return p;
+export function ytPath() {
+  for (const p of CANDIDATES) {
+    try {
+      if (fs.existsSync(p)) {
+        fs.chmodSync(p, 0o755);
+        return p;
+      }
+    } catch {}
+  }
+  return 'yt-dlp'; // last resort: whatever is on PATH
 }
 
-function run(cmd, args, timeoutMs) {
+export function binaryReport() {
+  return {
+    cwd: process.cwd(),
+    candidates: CANDIDATES.map((p) => ({ path: p, exists: (() => { try { return fs.existsSync(p); } catch { return false; } })() })),
+    chosen: ytPath(),
+  };
+}
+
+export function run(cmd, args, timeoutMs) {
   return new Promise((resolve) => {
     let out = '';
     let err = '';
@@ -27,27 +47,28 @@ function run(cmd, args, timeoutMs) {
     try {
       child = spawn(cmd, args, { windowsHide: true });
     } catch (e) {
-      return resolve({ code: -1, out, err: String(e) });
+      resolve({ code: -1, out, err: String(e) });
+      return;
     }
 
     const timer = setTimeout(() => {
       try { child.kill('SIGKILL'); } catch {}
     }, timeoutMs);
 
-    child.stdout?.on?.('data', (d) => (out += d));
-    child.stderr?.on?.('data', (d) => (err += d));
+    child.stdout?.on('data', (d) => (out += d));
+    child.stderr?.on('data', (d) => (err += d));
     child.on('error', (e) => {
       clearTimeout(timer);
       resolve({ code: -1, out, err: e.message });
     });
     child.on('close', (code) => {
       clearTimeout(timer);
-      resolve({ code, out, err, killed: child.killed });
+      resolve({ code, out, err });
     });
   });
 }
 
-function tidyError(text) {
+export function tidyError(text) {
   const lines = String(text || '')
     .split(/\r?\n/)
     .map((l) => l.trim())
@@ -56,31 +77,46 @@ function tidyError(text) {
   return last.replace(/^ERROR:\s*/i, '').slice(0, 300);
 }
 
-function hintFor(text) {
+export function hintFor(text) {
   const t = String(text || '').toLowerCase();
-  if (/sign in|login|log in|cookies|bot|account/.test(t))
-    return 'This source wants a logged-in session, which is not configurable on the serverless deploy. Run the tool on your own machine or a VPS with a cookies.txt for that.';
+  if (/sign in|login|log in|cookies|confirm your age|bot/.test(t))
+    return 'This source wants a logged-in session, which the serverless deploy cannot hold. Run the tool locally or on the VPS with a cookies.txt for that.';
   if (/private|unavailable|removed/.test(t)) return 'That video is private, removed, or region-locked.';
   if (/unsupported url|no video formats/.test(t)) return 'That link does not point at a single video page.';
   if (/http error 429|too many requests/.test(t))
-    return 'The source is rate-limiting this shared server IP. Try again later, or self-host — home and VPS IPs are far less throttled than cloud IPs.';
+    return 'The source is rate-limiting this server IP. Retry later; home and VPS IPs are throttled far less than cloud IPs.';
+  if (/ffmpeg|merger/.test(t))
+    return 'This format needs ffmpeg to merge audio and video, which this deploy does not ship. Pick a lower quality (a ready-mixed MP4) instead.';
   return null;
 }
 
-function commonArgs() {
+export function commonArgs() {
   return ['--no-playlist', '--no-warnings', '--no-mtime'];
 }
 
-function formatArgs(mode, height) {
-  const args = ['-S', 'res,vcodec:h264,acodec:aac'];
+/**
+ * Without ffmpeg there is no merging and no re-encoding, so the only honest
+ * output is a progressive MP4 (video) or the source audio track (m4a).
+ */
+export function formatPlan(mode, height, ffmpeg) {
   if (mode === 'audio') {
-    args.push('-f', 'ba/b', '-x', '--audio-format', 'mp3', '--audio-quality', '0');
-  } else if (height) {
-    args.push('-f', `bv*[height<=${height}]+ba/b[height<=${height}]`, '--merge-output-format', 'mp4');
-  } else {
-    args.push('-f', 'bv*+ba/b', '--merge-output-format', 'mp4');
+    if (ffmpeg) {
+      return { args: ['-f', 'ba/b', '-x', '--audio-format', 'mp3', '--audio-quality', '0'], ext: 'mp3', mime: 'audio/mpeg' };
+    }
+    return { args: ['-f', 'ba[ext=m4a]/ba/b'], ext: 'm4a', mime: 'audio/mp4' };
   }
-  return args;
-}
 
-module.exports = { ytPath, run, tidyError, hintFor, commonArgs, formatArgs };
+  if (ffmpeg) {
+    if (height) {
+      return {
+        args: ['-S', 'res,vcodec:h264,acodec:aac', '-f', `bv*[height<=${height}]+ba/b[height<=${height}]`, '--merge-output-format', 'mp4'],
+        ext: 'mp4', mime: 'video/mp4',
+      };
+    }
+    return { args: ['-S', 'res,vcodec:h264,acodec:aac', '-f', 'bv*+ba/b', '--merge-output-format', 'mp4'], ext: 'mp4', mime: 'video/mp4' };
+  }
+
+  // progressive only: one file, already muxed, no post-processing needed
+  const cap = height ? `[height<=${height}]` : '';
+  return { args: ['-f', `b${cap}[ext=mp4]/b${cap}/b`], ext: 'mp4', mime: 'video/mp4' };
+}

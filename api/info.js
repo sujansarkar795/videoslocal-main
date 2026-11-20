@@ -1,18 +1,19 @@
 /**
  * POST /api/info — serverless variant.
  * { url } → { title, thumbnail, duration, uploader, site, heights[] }
- * Runs yt-dlp -J once; the heaviest part is metadata, so this fits a function.
+ * One `yt-dlp -J`; metadata only, so it fits a function comfortably.
  */
-const { ytPath, run, tidyError, hintFor, commonArgs } = require('./_util.js');
+import { ytPath, run, tidyError, hintFor, commonArgs } from './_util.js';
 
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'POST only.' });
     return;
   }
 
-  let body = req.body || {};
+  const body = req.body || {};
   const url = String(body.url || '').trim();
+
   if (!url) {
     res.status(400).json({ error: 'Paste a link first.' });
     return;
@@ -22,8 +23,7 @@ module.exports = async (req, res) => {
     return;
   }
 
-  const p = ytPath();
-  const r = await run(p, ['-J', '--socket-timeout', '20', ...commonArgs(), url], 55000);
+  const r = await run(ytPath(), ['-J', '--socket-timeout', '20', ...commonArgs(), url], 55000);
 
   if (r.code !== 0) {
     res.status(422).json({
@@ -61,4 +61,4 @@ module.exports = async (req, res) => {
     height: data.height || null,
     heights: heights.length ? heights : [1080, 720, 480, 360],
   });
-};
+}
